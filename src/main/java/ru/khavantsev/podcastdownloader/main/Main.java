@@ -94,12 +94,6 @@ public class Main {
                 int extIdx = file.lastIndexOf(".");
                 String ext = extIdx >= 0 ? file.substring(extIdx + 1) : "mp3";
 
-                if (extensions != null && !extensions.isEmpty()) {
-                    if (!extensions.contains(ext.toLowerCase())) {
-                        continue;
-                    }
-                }
-
                 String fileName = pathFormat.replace("YYYY", year);
                 fileName = fileName.replace("MM", month);
                 fileName = fileName.replace("DD", day);
@@ -108,6 +102,12 @@ public class Main {
                 fileName = fileName.replace("EXT", ext);
                 fileName = fileName.replace("NUMBER", new Integer(i+1).toString());
 
+                if (extensions != null && !extensions.isEmpty()) {
+                    if (!extensions.contains(ext.toLowerCase())) {
+                        System.out.println(i+1 + ". " + fileName + " skiping by ext");
+                        continue;
+                    }
+                }
 
                 File newFile = new File(downloadPath + fileSeparator + fileName);
                 if (newFile.exists()) {

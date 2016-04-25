@@ -1,0 +1,6 @@
+rss=http://bigpodcast.ru/rss
+path=D:/Аудио/THE BIG PODCAST/
+fromdate=2016-02-01
+extensions=mp3
+check_hashes=true
+check_hashes_file=D:/Аудио/THE BIG PODCAST.md5
