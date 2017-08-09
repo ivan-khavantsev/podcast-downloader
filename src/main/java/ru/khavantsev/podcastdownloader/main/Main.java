@@ -7,6 +7,7 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.channels.Channels;
@@ -51,7 +52,7 @@ public class Main {
         NodeList list = document.getElementsByTagName("item");
 
         System.out.println("Total items: " + list.getLength());
-        for (Integer i = list.getLength()-1; i >= 0 ; i--) {
+        for (Integer i = list.getLength() - 1; i >= 0; i--) {
             Node node = list.item(i);
             NodeList list2 = node.getChildNodes();
             String title = null;
@@ -84,7 +85,7 @@ public class Main {
             String day = String.format("%02d", calendar.get(Calendar.DAY_OF_MONTH));
 
             if (enclosure != null) {
-                URL website = new URL(enclosure);
+                URL website = getFinalURL(new URL(enclosure));
                 String file = website.getPath();
                 int idx = file.lastIndexOf("/");
                 file = idx >= 0 ? file.substring(idx + 1) : file;
@@ -100,18 +101,18 @@ public class Main {
                 fileName = fileName.replace("TITLE", title);
                 fileName = fileName.replace("FILE", file);
                 fileName = fileName.replace("EXT", ext);
-                fileName = fileName.replace("NUMBER", new Integer(i+1).toString());
+                fileName = fileName.replace("NUMBER", new Integer(i + 1).toString());
 
                 if (extensions != null && !extensions.isEmpty()) {
                     if (!extensions.contains(ext.toLowerCase())) {
-                        System.out.println(i+1 + ". " + fileName + " skiping by ext");
+                        System.out.println(i + 1 + ". " + fileName + " skiping by ext");
                         continue;
                     }
                 }
 
                 File newFile = new File(downloadPath + fileSeparator + fileName);
                 if (newFile.exists()) {
-                    System.out.println((i+1) + ". " + fileName + " exist.");
+                    System.out.println((i + 1) + ". " + fileName + " exist.");
                     continue;
                 }
 
@@ -121,7 +122,7 @@ public class Main {
 
                     ReadableByteChannel rbc = Channels.newChannel(website.openStream());
                     FileOutputStream fos = new FileOutputStream(tempFile);
-                    System.out.print(i+1 + ". " + fileName + " downloading...");
+                    System.out.print(i + 1 + ". " + fileName + " downloading...");
                     fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
                     fos.close();
                     tempFile.renameTo(newFile);
@@ -221,6 +222,29 @@ public class Main {
         } else {
             System.out.println("Incorrect podcast information");
         }
+    }
+
+    public static URL getFinalURL(URL url) {
+        try {
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setInstanceFollowRedirects(false);
+            con.addRequestProperty("Accept-Language", "en-US,en;q=0.8");
+            con.connect();
+            //con.getInputStream();
+            int resCode = con.getResponseCode();
+            if (resCode == HttpURLConnection.HTTP_SEE_OTHER
+                    || resCode == HttpURLConnection.HTTP_MOVED_PERM
+                    || resCode == HttpURLConnection.HTTP_MOVED_TEMP) {
+                String Location = con.getHeaderField("Location");
+                if (Location.startsWith("/")) {
+                    Location = url.getProtocol() + "://" + url.getHost() + Location;
+                }
+                return getFinalURL(new URL(Location));
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return url;
     }
 
     public static String md5File(String filename) throws IOException {
